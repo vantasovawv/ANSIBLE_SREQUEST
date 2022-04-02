@@ -1,0 +1,43 @@
+---
+- rpm_key:
+    state: present
+    key: https://rpms.remirepo.net/RPM-GPG-KEY-remi2018
+
+- rpm_key:
+    state: present
+    key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
+
+- name: Install epel repo.
+  yum:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+    state: present
+
+- name: Install remi repo.
+  yum:
+    name: "http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
+    state: present
+
+- name: Enable repo
+  shell: |
+    dnf module reset php -y
+    dnf module enable php:remi-7.4 -y
+
+- name: install php7.4
+  yum:
+    name: "{{ packages }}"
+    enablerepo: remi-php74
+  vars:
+    packages:
+    - php
+    - php-fpm
+    - php-mysqlnd
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Disable default pool
+  ignore_errors: yes
+  command: mv /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.disabled creates=/etc/php-fpm.d/www.disabled
+  notify: restart php-fpm
+
+- name: Copy php-fpm configuration
+  template: src=wordpress.conf dest=/etc/php-fpm.d/
+  notify: restart php7.4-fpm

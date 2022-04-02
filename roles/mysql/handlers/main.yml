@@ -1,0 +1,10 @@
+---
+- name: restart mariadb
+  service: name=mariadb state=restarted
+  when: ansible_os_family == 'RedHat'
+
+- name: restart mysql
+  service: name=mysql state=restarted
+  when: ansible_os_family == 'Debian'
+
+

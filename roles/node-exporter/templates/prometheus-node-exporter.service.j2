@@ -1,0 +1,15 @@
+[Unit]
+Description=node-exporter Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=node-exporter
+Group=node-exporter
+ExecStart=/usr/local/bin/node_exporter --web.listen-address=":9100"
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

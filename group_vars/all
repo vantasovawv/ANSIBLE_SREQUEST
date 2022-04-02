@@ -1,0 +1,23 @@
+---
+# MySQL settings
+mysqlservice: mysqld
+mysql_port: 3306
+
+# These are the WordPress database settings
+
+mysql_root_password: "sre-password"
+mysql_db: "wpdb"
+mysql_user: "wpuser"
+mysql_password: "sre-password"
+
+
+nginx_port: 80
+server_hostname: "{{ ansible_host }}"
+
+
+
+#HTTP Settings
+http_host: "{{ansible_host}}"
+http_conf: "{{ansible_host}}.conf"
+http_port: "80"
+

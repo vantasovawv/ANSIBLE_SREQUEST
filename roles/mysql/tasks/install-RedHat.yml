@@ -1,0 +1,33 @@
+---
+# This playbook will install MariaDB and create db user and give permissions.
+
+- name: Install MariaDB package
+  yum: name={{ item }} state=installed
+  with_items:
+   - mariadb-server
+   - python3-PyMySQL
+
+
+- name: Create Mysql configuration file
+  template: src=my.cnf.j2 dest=/etc/my.cnf
+  notify:
+  - restart mariadb
+
+- name: Create MariaDB log file
+  file: path=/var/log/mysqld.log state=touch owner=mysql group=mysql mode=0775
+
+- name: Start MariaDB Service
+  service: name=mariadb state=started enabled=yes
+
+- name: "MANUAL ACTION: mysql_secure_installation"
+  pause:
+    prompt: "Done? Press ENTER"
+- name: Create WordPress database
+  mysql_db: name={{ mysql_db }} state=present
+
+- name: Create WordPress database user
+  mysql_user: name={{ mysql_user }} password={{ mysql_password }} priv={{ mysql_db }}.*:ALL host='localhost' state=present
+
+- name: insert firewalld rule
+  firewalld: port={{ mysql_port }}/tcp permanent=true state=enabled immediate=yes
+  ignore_errors: yes

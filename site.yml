@@ -1,0 +1,16 @@
+---
+- name: Install WordPress, Mysql, Nginx, PHP-FPM, node-exporter
+  hosts: alma
+  vars_files:
+    - group_vars/all
+  become: yes
+
+  roles:
+    #- firewall
+    #- init
+    #- mysql
+    #- nginx
+    #- php-fpm
+    #- wordpress
+    #- node-exporter
+    - zabbix-agent

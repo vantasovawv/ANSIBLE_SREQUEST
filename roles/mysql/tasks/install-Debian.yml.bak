@@ -1,0 +1,71 @@
+ - name: Install the MySQL packages
+   apt: name={{ item }} state=present update_cache=yes
+   with_items:
+     - mysql-server
+     - mysql-client
+     - python3-pymysql
+
+
+ - name: Copy .my.cnf for easier mysql automation
+   ignore_errors: true
+   blockinfile:
+     path: /root/.my.cnf
+     create: yes
+     block: |
+       [client]
+       user=root
+       password={{ mysql_root_password }}
+
+ - name: Set root password
+   ignore_errors: yes
+   community.mysql.mysql_user:
+     login_unix_socket: /var/run/mysqld/mysqld.sock
+     host: localhost
+     name: root
+     password: "{{ mysql_root_password }}"
+
+ - name: Create a new database with name "{{ mysql_db }}"
+   ignore_errors: yes
+   community.mysql.mysql_db:
+     login_unix_socket: /var/run/mysqld/mysqld.sock
+     name: "{{ mysql_db }}"
+     state: present
+
+ - name: Create user with password, all database privileges and 'WITH GRANT OPTION' in "{{ mysql_db }}"
+   ignore_errors: yes
+   community.mysql.mysql_user:
+     login_unix_socket: /var/run/mysqld/mysqld.sock
+     state: present
+     name: "{{ mysql_user }}"
+     password: "{{ mysql_password }}"
+     priv:
+       '{{ mysql_db }}.*': 'ALL,GRANT'
+
+ - name: allow conect from any ip
+   community.mysql.mysql_query:
+     login_unix_socket: /var/run/mysqld/mysqld.sock
+     login_db: mysql
+     query: "{{ item }}"
+   with_items:
+     - SELECT user, host FROM mysql.user;;
+     - UPDATE mysql.user SET host='%' WHERE user='root';
+     - UPDATE mysql.user SET host='%' WHERE user='"{{ mysql_user }}"';
+
+ - name: Removes test database
+   ignore_errors: true
+   community.mysql.mysql_db:
+     login_unix_socket: /var/run/mysqld/mysqld.sock
+     name: test
+     state: absent
+
+
+
+
+ - name: Prohibit Remote Root login
+   community.mysql.mysql_query:
+     login_db: mysql
+     query: "{{ item }}"
+   with_items:
+     - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+     - FLUSH PRIVILEGES;
+
